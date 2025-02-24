@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: counter
+  labels:
+    app: counter-app
+    app.openshift.io/runtime: eap
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: counter
+  template:
+    metadata:
+      labels:
+        app: counter
+    spec:
+      containers:
+        - resources: {}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - '-c'
+                - /opt/eap/bin/readinessProbe.sh
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: counter
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - '-c'
+                - /opt/eap/bin/livenessProbe.sh
+            initialDelaySeconds: 60
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: JGROUPS_PING_PROTOCOL
+              value: dns.DNS_PING
+            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+              value: '8888'
+            - name: AUTO_DEPLOY_EXPLODED
+              value: 'false'
+            - name: ENABLE_GENERATE_DEFAULT_DATASOURCE
+              value: 'false'
+            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+              value: counter-ping
+            - name: ENV_FILES
+              value: /etc/extensions/*
+          ports:
+            - name: jolokia
+              containerPort: 8778
+              protocol: TCP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: ping
+              containerPort: 8888
+              protocol: TCP
+            - name: admin
+              containerPort: 9990
+              protocol: TCP
+          imagePullPolicy: Always
+          terminationMessagePolicy: File
+          image: 'quay.io/YOUR-USER-NAME/counter:latest'

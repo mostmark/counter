@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: counter-route
+spec:
+  path: /counter/counter
+  to:
+    name: counter
+    weight: 100
+    kind: Service
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  port:
+    targetPort: http
